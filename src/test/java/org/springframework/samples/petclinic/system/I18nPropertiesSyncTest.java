@@ -51,28 +51,32 @@ public class I18nPropertiesSyncTest {
 		StringBuilder report = new StringBuilder();
 
 		for (Path file : files) {
-			List<String> lines = Files.readAllLines(file);
-			for (int i = 0; i < lines.size(); i++) {
-				String line = lines.get(i).trim();
+			try (var reader = Files.newBufferedReader(file)) {
+				String rawLine;
+				int lineNumber = 0;
+				while ((rawLine = reader.readLine()) != null) {
+					lineNumber++;
+					String line = rawLine.trim();
 
-				if (line.startsWith("//") || line.startsWith("@") || line.contains("log.")
-						|| line.contains("System.out")) {
-					continue;
-				}
+					if (line.startsWith("//") || line.startsWith("@") || line.contains("log.")
+							|| line.contains("System.out")) {
+						continue;
+					}
 
-				if (file.toString().endsWith(".html")) {
-					boolean hasLiteralText = HTML_TEXT_LITERAL.matcher(line).find();
-					boolean hasThTextAttribute = HAS_TH_TEXT_ATTRIBUTE.matcher(line).find();
-					boolean isBracketOnly = BRACKET_ONLY.matcher(line).find();
+					if (file.toString().endsWith(".html")) {
+						boolean hasLiteralText = HTML_TEXT_LITERAL.matcher(line).find();
+						boolean hasThTextAttribute = HAS_TH_TEXT_ATTRIBUTE.matcher(line).find();
+						boolean isBracketOnly = BRACKET_ONLY.matcher(line).find();
 
-					if (hasLiteralText && !line.contains("#{") && !hasThTextAttribute && !isBracketOnly) {
-						report.append("HTML: ")
-							.append(file)
-							.append(" Line ")
-							.append(i + 1)
-							.append(": ")
-							.append(line)
-							.append("\n");
+						if (hasLiteralText && !line.contains("#{") && !hasThTextAttribute && !isBracketOnly) {
+							report.append("HTML: ")
+								.append(file)
+								.append(" Line ")
+								.append(lineNumber)
+								.append(": ")
+								.append(line)
+								.append("\n");
+						}
 					}
 				}
 			}
