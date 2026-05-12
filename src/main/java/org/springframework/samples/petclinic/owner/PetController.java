@@ -38,6 +38,10 @@ import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
+ * Web MVC controller for managing pets under an owner.
+ * <p>
+ * Supports pet creation, updates, and validation for owner-managed pets.
+ * </p>
  * @author Juergen Hoeller
  * @author Ken Krebs
  * @author Arjen Poutsma
@@ -58,11 +62,20 @@ class PetController {
 		this.types = types;
 	}
 
+	/**
+	 * Populate the pet types reference data for form rendering.
+	 * @return all available {@link PetType} values
+	 */
 	@ModelAttribute("types")
 	public Collection<PetType> populatePetTypes() {
 		return this.types.findPetTypes();
 	}
 
+	/**
+	 * Resolve the owner for the current request.
+	 * @param ownerId the owner identifier from the path
+	 * @return the resolved {@link Owner}
+	 */
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable("ownerId") int ownerId) {
 		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
@@ -71,6 +84,12 @@ class PetController {
 		return owner;
 	}
 
+	/**
+	 * Resolve the pet for the current request, creating a new pet when no id is provided.
+	 * @param ownerId the owner identifier from the path
+	 * @param petId optional pet identifier from the path
+	 * @return the resolved or newly created {@link Pet}
+	 */
 	@ModelAttribute("pet")
 	public Pet findPet(@PathVariable("ownerId") int ownerId,
 			@PathVariable(name = "petId", required = false) Integer petId) {
@@ -85,17 +104,31 @@ class PetController {
 		return owner.getPet(petId);
 	}
 
+	/**
+	 * Configure binding rules for owner data.
+	 * @param dataBinder the data binder used for request binding
+	 */
 	@InitBinder("owner")
 	public void initOwnerBinder(WebDataBinder dataBinder) {
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
+	/**
+	 * Configure binding rules and validators for pet data.
+	 * @param dataBinder the data binder used for request binding
+	 */
 	@InitBinder("pet")
 	public void initPetBinder(WebDataBinder dataBinder) {
 		dataBinder.setValidator(new PetValidator());
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
+	/**
+	 * Display the pet creation form.
+	 * @param owner the owner for the new pet
+	 * @param model the UI model
+	 * @return the pet creation view name
+	 */
 	@GetMapping("/pets/new")
 	public String initCreationForm(Owner owner, ModelMap model) {
 		Pet pet = new Pet();
@@ -103,6 +136,14 @@ class PetController {
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
+	/**
+	 * Process a new pet submission.
+	 * @param owner the owner for the new pet
+	 * @param pet the pet data from the form
+	 * @param result binding and validation results
+	 * @param redirectAttributes attributes for the redirect response
+	 * @return redirect to owner details or the form view on errors
+	 */
 	@PostMapping("/pets/new")
 	public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
@@ -126,11 +167,23 @@ class PetController {
 		return "redirect:/owners/{ownerId}";
 	}
 
+	/**
+	 * Display the pet update form.
+	 * @return the pet update view name
+	 */
 	@GetMapping("/pets/{petId}/edit")
 	public String initUpdateForm() {
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
+	/**
+	 * Process a pet update submission.
+	 * @param owner the owner of the pet
+	 * @param pet the updated pet data
+	 * @param result binding and validation results
+	 * @param redirectAttributes attributes for the redirect response
+	 * @return redirect to owner details or the form view on errors
+	 */
 	@PostMapping("/pets/{petId}/edit")
 	public String processUpdateForm(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {

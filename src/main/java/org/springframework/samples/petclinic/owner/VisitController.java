@@ -31,6 +31,10 @@ import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
+ * Web MVC controller for scheduling and saving pet visits.
+ * <p>
+ * Resolves the owner and pet for each request and prepares visit data for forms.
+ * </p>
  * @author Juergen Hoeller
  * @author Ken Krebs
  * @author Arjen Poutsma
@@ -47,17 +51,21 @@ class VisitController {
 		this.owners = owners;
 	}
 
+	/**
+	 * Configure the data binder to disallow binding of identifier fields.
+	 * @param dataBinder the data binder used for request binding
+	 */
 	@InitBinder
 	public void setAllowedFields(WebDataBinder dataBinder) {
 		dataBinder.setDisallowedFields("id", "*.id");
 	}
 
 	/**
-	 * Called before each and every @RequestMapping annotated method. 2 goals: - Make sure
-	 * we always have fresh data - Since we do not use the session scope, make sure that
-	 * Pet object always has an id (Even though id is not part of the form fields)
-	 * @param petId
-	 * @return Pet
+	 * Load the owner and pet, and prepare a new visit instance for form binding.
+	 * @param ownerId the owner identifier from the path
+	 * @param petId the pet identifier from the path
+	 * @param model the model to populate with owner and pet
+	 * @return a new {@link Visit} attached to the pet
 	 */
 	@ModelAttribute("visit")
 	public Visit loadPetWithVisit(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
@@ -79,15 +87,24 @@ class VisitController {
 		return visit;
 	}
 
-	// Spring MVC calls method loadPetWithVisit(...) before initNewVisitForm is
-	// called
+	/**
+	 * Display the new visit form for a pet.
+	 * @return the visit creation view name
+	 */
 	@GetMapping("/owners/{ownerId}/pets/{petId}/visits/new")
 	public String initNewVisitForm() {
 		return "pets/createOrUpdateVisitForm";
 	}
 
-	// Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is
-	// called
+	/**
+	 * Process a new visit submission.
+	 * @param owner the resolved owner from the model
+	 * @param petId the pet identifier from the path
+	 * @param visit the visit data from the form
+	 * @param result binding and validation results
+	 * @param redirectAttributes attributes for the redirect response
+	 * @return redirect to owner details or the form view on errors
+	 */
 	@PostMapping("/owners/{ownerId}/pets/{petId}/visits/new")
 	public String processNewVisitForm(@ModelAttribute Owner owner, @PathVariable int petId, @Valid Visit visit,
 			BindingResult result, RedirectAttributes redirectAttributes) {
