@@ -127,7 +127,6 @@ class PetController {
 	/**
 	 * Display the pet creation form.
 	 * @param owner the owner for the new pet
-	 * @param model the UI model
 	 * @return the pet creation view name
 	 */
 	@GetMapping("/pets/new")
